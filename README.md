@@ -64,7 +64,44 @@ You need a Mac with **Xcode**.
 > Free Apple IDs: the app signature expires after **7 days** — just re-run from
 > Xcode to refresh it. A paid Apple Developer account ($99/yr) lasts a year.
 
-### Option B — AltStore / Sideloadly (no keeping a Mac plugged in)
+### Option W — Windows + Sideloadly (no Mac at all) ⭐ for you
+
+Sideloadly signs & installs an `.ipa`, but it can't *build* Swift code — that
+needs a Mac. So let a **cloud Mac on GitHub Actions** build the `.ipa` for you:
+
+1. **Build the IPA in the cloud**
+   - Go to the repo on GitHub → **Actions** tab.
+   - Pick **"Build unsigned IPA"** → **Run workflow** (on branch
+     `claude/modest-sagan-t3836u`). It also runs automatically on every push.
+   - Wait ~3–5 min for the green check.
+   - Open the finished run → **Artifacts** → download **`FlightDeals-ipa`**
+     (a zip). Unzip it to get **`FlightDeals.ipa`**.
+
+2. **Install Sideloadly on Windows** from <https://sideloadly.io>
+   (also install **iTunes** + **iCloud** from Apple's site, not the Microsoft
+   Store versions — Sideloadly needs them for device drivers).
+
+3. **Sideload it**
+   - Plug in your iPhone, open Sideloadly.
+   - Drag **`FlightDeals.ipa`** into Sideloadly.
+   - Enter your **Apple ID** (a free one works). Sideloadly signs it for you.
+   - Click **Start**. Approve the 2FA / "allow" prompts.
+
+4. **Trust the app on the phone**
+   - iPhone → **Settings → General → VPN & Device Management** → tap your
+     Apple ID → **Trust**.
+
+5. **Open the app**, paste your Amadeus key in Settings, tap Scan.
+
+> ⏳ Free Apple ID limits: the app signature expires after **7 days** and you
+> can have max 3 sideloaded apps. To refresh, just re-run Sideloadly with the
+> same `.ipa` before it expires (or rebuild a fresh `.ipa` from Actions).
+> A paid Apple Developer account ($99/yr) lasts a year per signing.
+>
+> 🔔 Background daily scans + notifications work the same on a sideloaded
+> build — just keep Background App Refresh and Notifications enabled.
+
+### Option B — AltStore / Sideloadly with your own Mac-built IPA
 1. In Xcode: **Product → Archive**, then export an **.ipa**
    (Distribution → *Ad Hoc* or *Development*), **or** build with the
    command below and zip the `.app` into an `.ipa`.
