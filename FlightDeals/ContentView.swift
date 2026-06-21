@@ -22,12 +22,17 @@ struct DealsView: View {
                 statusSection
                 if !store.goodDeals.isEmpty {
                     Section("Good deals 🎉") {
-                        ForEach(store.goodDeals) { DealRow(deal: $0) }
+                        ForEach(store.goodDeals) { DealRow(deal: $0, adults: store.config.adults) }
+                    }
+                }
+                if !store.aboveBudgetDeals.isEmpty {
+                    Section("Above your max price 💸") {
+                        ForEach(store.aboveBudgetDeals) { DealRow(deal: $0, adults: store.config.adults) }
                     }
                 }
                 if !store.trapDeals.isEmpty {
                     Section("Skipped — looks like a trap ⚠️") {
-                        ForEach(store.trapDeals) { DealRow(deal: $0) }
+                        ForEach(store.trapDeals) { DealRow(deal: $0, adults: store.config.adults) }
                     }
                 }
                 if store.deals.isEmpty && !store.isScanning {
@@ -75,10 +80,11 @@ struct DealsView: View {
 
 struct DealRow: View {
     let deal: FlightDeal
+    var adults: Int = 1
 
     var body: some View {
         NavigationLink {
-            DealDetailView(deal: deal)
+            DealDetailView(deal: deal, adults: adults)
         } label: {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
@@ -88,6 +94,10 @@ struct DealRow: View {
                     Spacer()
                     Text("\(deal.origin) → \(deal.destination)")
                         .font(.subheadline).foregroundStyle(.secondary)
+                }
+                if adults > 1 {
+                    Text("\(Int(deal.price) / adults) \(deal.currency)/person · \(adults) adults")
+                        .font(.caption2).foregroundStyle(.secondary)
                 }
                 Text("\(deal.departureDate.prettyDate)"
                      + (deal.nights.map { " · \($0)n" } ?? ""))
@@ -108,11 +118,16 @@ struct DealRow: View {
 
 struct DealDetailView: View {
     let deal: FlightDeal
+    var adults: Int = 1
 
     var body: some View {
         List {
             Section("Price") {
                 Text("\(Int(deal.price)) \(deal.currency)").font(.largeTitle.bold())
+                Text(adults > 1
+                     ? "Total for \(adults) adults · \(Int(deal.price) / adults) \(deal.currency) per person"
+                     : "Total for 1 adult")
+                    .font(.caption).foregroundStyle(.secondary)
             }
             Section("Route") {
                 LabeledContent("From", value: deal.origin)

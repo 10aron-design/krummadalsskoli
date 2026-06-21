@@ -67,15 +67,23 @@ struct SettingsView: View {
     }
 
     private var dealSection: some View {
-        Section("What counts as a good deal") {
+        Section {
             HStack {
-                Text("Max price")
+                Text("Max price (total)")
                 Spacer()
                 TextField("price", value: $store.config.maxPrice, format: .number)
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.trailing)
                 Text(store.config.preferredCurrency)
             }
+            if store.config.adults > 1 {
+                Text("= \(Int(store.config.maxPrice) / store.config.adults) \(store.config.preferredCurrency) per person × \(store.config.adults) adults")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        } header: {
+            Text("What counts as a good deal")
+        } footer: {
+            Text("Max price is the TOTAL for everyone in the search (\(store.config.adults) adult\(store.config.adults == 1 ? "" : "s")). Iceland→Japan round-trips are rarely under ~600 \(store.config.preferredCurrency) per person, so set this realistically or you'll see nothing in \"Good deals\".")
         }
     }
 
