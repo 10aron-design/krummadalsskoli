@@ -28,10 +28,11 @@ struct SearchConfig: Codable, Equatable {
     /// Sampling step in days across the month window. Smaller = more API calls.
     var samplingStepDays: Int = 7
 
-    /// Hard cap on API searches per scan. Protects your monthly quota: the scan
-    /// samples evenly across the date window to fit within this many calls.
-    /// Free RapidAPI tiers are tiny (~100/month), so keep this low.
-    var maxRequestsPerScan: Int = 12
+    /// Hard cap on searches per scan. Protects your monthly quota: the scan
+    /// samples evenly across the date window to fit within this many searches.
+    /// NOTE: each search costs ~2–5 RapidAPI calls (Skyscanner needs polling),
+    /// and free tiers are tiny (~100/month), so keep this low.
+    var maxRequestsPerScan: Int = 6
 
     // MARK: Trap rules
 

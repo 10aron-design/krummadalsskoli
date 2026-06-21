@@ -57,12 +57,12 @@ struct SettingsView: View {
                     value: $store.config.maxTripNights, in: 1...90)
             Stepper("Sample every \(store.config.samplingStepDays) days",
                     value: $store.config.samplingStepDays, in: 1...14)
-            Stepper("Max API calls per scan: \(store.config.maxRequestsPerScan)",
-                    value: $store.config.maxRequestsPerScan, in: 1...100)
+            Stepper("Max searches per scan: \(store.config.maxRequestsPerScan)",
+                    value: $store.config.maxRequestsPerScan, in: 1...50)
         } header: {
             Text("Flexible dates")
         } footer: {
-            Text("We scan every Nth day between the two months and try a few trip lengths, spread evenly to fit the call budget. ⚠️ Free RapidAPI plans cap you at ~100 requests/MONTH — keep \"Max API calls per scan\" low (e.g. 10) and run scans sparingly, or you'll burn the whole month in one go.")
+            Text("We scan every Nth day between the two months and try a few trip lengths, spread evenly to fit the budget. ⚠️ Each search costs ~2–5 RapidAPI calls (Skyscanner returns results in stages, so the app polls). Free plans cap you near ~100 calls/MONTH — keep \"Max searches per scan\" low (e.g. 5) and scan sparingly.")
         }
     }
 

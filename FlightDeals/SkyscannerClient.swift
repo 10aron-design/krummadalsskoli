@@ -122,6 +122,81 @@ actor SkyscannerClient: FlightProvider {
 
     // MARK: Round-trip search
 
+    /// Outcome of one full search (initial call + any polling).
+    struct SearchResult {
+        var offers: [RawOffer]
+        var status: String
+        var httpCode: Int
+        var rawHead: String
+        var calls: Int
+    }
+
+    /// Sky-Scrapper's searchFlights returns `status: incomplete` with a
+    /// sessionId and NO itineraries on the first call. We must poll
+    /// `searchIncomplete` with that sessionId until results arrive (or we give
+    /// up). This does the whole dance and reports how many calls it cost.
+    private func performSearch(origin: String, destination: String,
+                               departure: Date, returnDate: Date,
+                               adults: Int, currency: String,
+                               maxPolls: Int = 4) async throws -> SearchResult {
+        let from = try await resolveAirport(origin)
+        let to = try await resolveAirport(destination)
+
+        let req = try makeRequest(
+            path: "/api/v1/flights/searchFlights",
+            query: [
+                .init(name: "originSkyId", value: from.skyId),
+                .init(name: "destinationSkyId", value: to.skyId),
+                .init(name: "originEntityId", value: from.entityId),
+                .init(name: "destinationEntityId", value: to.entityId),
+                .init(name: "date", value: departure.ymd),
+                .init(name: "returnDate", value: returnDate.ymd),
+                .init(name: "cabinClass", value: "economy"),
+                .init(name: "adults", value: String(adults)),
+                .init(name: "sortBy", value: "best"),
+                .init(name: "currency", value: currency),
+                .init(name: "market", value: creds.market),
+                .init(name: "countryCode", value: creds.market)
+            ])
+        var calls = 1
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
+        guard code == 200 else {
+            throw FlightAPIError.http(code, String(data: data, encoding: .utf8) ?? "")
+        }
+
+        var lastData = data
+        var offers = Self.parseOffers(data: data, currency: currency)
+        var status = Self.contextStatus(data: data) ?? "unknown"
+
+        // Poll searchIncomplete until itineraries show up or status completes.
+        if offers.isEmpty, let sessionId = Self.sessionId(data: data) {
+            for _ in 0..<maxPolls {
+                if status == "complete" { break }
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                let pollReq = try makeRequest(
+                    path: "/api/v1/flights/searchIncomplete",
+                    query: [
+                        .init(name: "sessionId", value: sessionId),
+                        .init(name: "currency", value: currency),
+                        .init(name: "market", value: creds.market),
+                        .init(name: "countryCode", value: creds.market)
+                    ])
+                let (d2, r2) = try await URLSession.shared.data(for: pollReq)
+                calls += 1
+                let c2 = (r2 as? HTTPURLResponse)?.statusCode ?? 0
+                guard c2 == 200 else { break }   // don't keep burning calls on errors
+                lastData = d2
+                offers = Self.parseOffers(data: d2, currency: currency)
+                status = Self.contextStatus(data: d2) ?? status
+                if !offers.isEmpty && status == "complete" { break }
+            }
+        }
+
+        let head = String((String(data: lastData, encoding: .utf8) ?? "").prefix(500))
+        return SearchResult(offers: offers, status: status, httpCode: code, rawHead: head, calls: calls)
+    }
+
     func searchRoundTrip(origin: String,
                          destination: String,
                          departure: Date,
@@ -130,32 +205,11 @@ actor SkyscannerClient: FlightProvider {
                          nonStop: Bool,
                          currency: String,
                          max: Int = 5) async throws -> [RawOffer] {
-        let from = try await resolveAirport(origin)
-        let to = try await resolveAirport(destination)
-
-        let req = try makeRequest(
-            path: "/api/v1/flights/searchFlights",
-            query: [
-                .init(name: "originSkyId", value: from.skyId),
-                .init(name: "destinationSkyId", value: to.skyId),
-                .init(name: "originEntityId", value: from.entityId),
-                .init(name: "destinationEntityId", value: to.entityId),
-                .init(name: "date", value: departure.ymd),
-                .init(name: "returnDate", value: returnDate.ymd),
-                .init(name: "cabinClass", value: "economy"),
-                .init(name: "adults", value: String(adults)),
-                .init(name: "sortBy", value: "best"),
-                .init(name: "currency", value: currency),
-                .init(name: "market", value: creds.market),
-                .init(name: "countryCode", value: creds.market)
-            ])
-
-        let (data, resp) = try await URLSession.shared.data(for: req)
-        guard let http = resp as? HTTPURLResponse else { throw FlightAPIError.http(0, "no response") }
-        guard http.statusCode == 200 else {
-            throw FlightAPIError.http(http.statusCode, String(data: data, encoding: .utf8) ?? "")
-        }
-        var offers = Self.parseOffers(data: data, currency: currency)
+        let result = try await performSearch(
+            origin: origin, destination: destination,
+            departure: departure, returnDate: returnDate,
+            adults: adults, currency: currency)
+        var offers = result.offers
         if nonStop {
             offers = offers.filter { offer in
                 offer.itineraries.allSatisfy { ($0.segments.count - 1) <= 0 }
@@ -164,43 +218,18 @@ actor SkyscannerClient: FlightProvider {
         return Array(offers.prefix(max))
     }
 
-    /// Fires ONE search and returns a human-readable diagnosis: HTTP code,
-    /// resolved airport ids, search status, offers parsed, and — if nothing
-    /// parsed — a snippet of the raw JSON so the shape can be inspected.
+    /// Fires ONE search (with polling) and returns a human-readable diagnosis.
     func diagnose(origin: String, destination: String,
                   departure: Date, returnDate: Date,
                   adults: Int, currency: String) async throws -> String {
-        let from = try await resolveAirport(origin)
-        let to = try await resolveAirport(destination)
-        let req = try makeRequest(
-            path: "/api/v1/flights/searchFlights",
-            query: [
-                .init(name: "originSkyId", value: from.skyId),
-                .init(name: "destinationSkyId", value: to.skyId),
-                .init(name: "originEntityId", value: from.entityId),
-                .init(name: "destinationEntityId", value: to.entityId),
-                .init(name: "date", value: departure.ymd),
-                .init(name: "returnDate", value: returnDate.ymd),
-                .init(name: "cabinClass", value: "economy"),
-                .init(name: "adults", value: String(adults)),
-                .init(name: "sortBy", value: "best"),
-                .init(name: "currency", value: currency),
-                .init(name: "market", value: creds.market),
-                .init(name: "countryCode", value: creds.market)
-            ])
-        let (data, resp) = try await URLSession.shared.data(for: req)
-        let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
-        guard code == 200 else {
-            let body = String(data: data, encoding: .utf8) ?? ""
-            return "❌ HTTP \(code): \(String(body.prefix(200)))"
+        let r = try await performSearch(
+            origin: origin, destination: destination,
+            departure: departure, returnDate: returnDate,
+            adults: adults, currency: currency)
+        if let cheapest = r.offers.map({ $0.price.amount }).min() {
+            return "✅ Works! \(origin)→\(destination): \(r.offers.count) offers, cheapest \(Int(cheapest)) \(currency) (status: \(r.status), \(r.calls) calls)."
         }
-        let offers = Self.parseOffers(data: data, currency: currency)
-        let status = Self.contextStatus(data: data) ?? "unknown"
-        if let cheapest = offers.map({ $0.price.amount }).min() {
-            return "✅ Works! \(origin)→\(destination): \(offers.count) offers, cheapest \(Int(cheapest)) \(currency) (status: \(status))."
-        }
-        let body = String(data: data, encoding: .utf8) ?? "<non-text>"
-        return "⚠️ HTTP 200 but 0 offers parsed (status: \(status)). Raw head:\n\(String(body.prefix(500)))"
+        return "⚠️ \(r.offers.count) offers after \(r.calls) calls (status: \(r.status)). Raw head:\n\(r.rawHead)"
     }
 
     // MARK: Defensive JSON -> neutral RawOffer (no strict Codable, tolerates
@@ -230,6 +259,14 @@ actor SkyscannerClient: FlightProvider {
         let d = obj?["data"] as? [String: Any]
         let ctx = d?["context"] as? [String: Any]
         return str(ctx?["status"])
+    }
+
+    /// The sessionId needed to poll searchIncomplete for the full results.
+    static func sessionId(data: Data) -> String? {
+        let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let d = obj?["data"] as? [String: Any]
+        let ctx = d?["context"] as? [String: Any]
+        return str(ctx?["sessionId"])
     }
 
     static func parseOffers(data: Data, currency: String) -> [RawOffer] {
