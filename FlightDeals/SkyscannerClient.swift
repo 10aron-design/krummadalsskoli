@@ -56,6 +56,19 @@ actor SkyscannerClient: FlightProvider {
     /// background runs and avoid burning quota re-resolving the same airports.
     struct AirportID: Codable { let skyId: String; let entityId: String }
     private static let cacheKey = "skyscanner.airportCache"
+    private static let incompletePathKey = "skyscanner.incompletePath"
+
+    /// Known candidate paths for the "poll until complete" endpoint. Different
+    /// Sky-Scrapper listings name it differently; we auto-detect which works
+    /// and remember it.
+    static let incompleteCandidates = [
+        "/api/v1/flights/searchIncomplete",
+        "/api/v2/flights/searchIncomplete",
+        "/api/v1/flights/getFlightDetails",
+        "/api/v1/searchIncomplete"
+    ]
+    /// The candidate confirmed to return HTTP 200, cached across runs.
+    private var workingIncompletePath: String?
 
     init(creds: SkyscannerCredentials) {
         self.creds = creds
@@ -65,6 +78,7 @@ actor SkyscannerClient: FlightProvider {
         } else {
             self.airportCache = [:]
         }
+        self.workingIncompletePath = UserDefaults.standard.string(forKey: Self.incompletePathKey)
     }
 
     private func saveCache() {
@@ -129,6 +143,7 @@ actor SkyscannerClient: FlightProvider {
         var httpCode: Int
         var rawHead: String
         var calls: Int
+        var note: String?
     }
 
     /// Sky-Scrapper's searchFlights returns `status: incomplete` with a
@@ -168,33 +183,52 @@ actor SkyscannerClient: FlightProvider {
         var lastData = data
         var offers = Self.parseOffers(data: data, currency: currency)
         var status = Self.contextStatus(data: data) ?? "unknown"
+        var note: String?
 
-        // Poll searchIncomplete until itineraries show up or status completes.
+        // Poll the "incomplete" endpoint until itineraries show up. We try the
+        // known candidate paths until one returns 200, then reuse that path.
         if offers.isEmpty, let sessionId = Self.sessionId(data: data) {
-            for _ in 0..<maxPolls {
+            func pollQuery() -> [URLQueryItem] {
+                [.init(name: "sessionId", value: sessionId),
+                 .init(name: "currency", value: currency),
+                 .init(name: "market", value: creds.market),
+                 .init(name: "countryCode", value: creds.market)]
+            }
+            pollRounds: for _ in 0..<maxPolls {
                 if status == "complete" { break }
                 try? await Task.sleep(nanoseconds: 1_500_000_000)
-                let pollReq = try makeRequest(
-                    path: "/api/v1/flights/searchIncomplete",
-                    query: [
-                        .init(name: "sessionId", value: sessionId),
-                        .init(name: "currency", value: currency),
-                        .init(name: "market", value: creds.market),
-                        .init(name: "countryCode", value: creds.market)
-                    ])
-                let (d2, r2) = try await URLSession.shared.data(for: pollReq)
-                calls += 1
-                let c2 = (r2 as? HTTPURLResponse)?.statusCode ?? 0
-                guard c2 == 200 else { break }   // don't keep burning calls on errors
-                lastData = d2
-                offers = Self.parseOffers(data: d2, currency: currency)
-                status = Self.contextStatus(data: d2) ?? status
+
+                let candidates = workingIncompletePath.map { [$0] } ?? Self.incompleteCandidates
+                var got200 = false
+                for path in candidates {
+                    let pollReq = try makeRequest(path: path, query: pollQuery())
+                    let (d2, r2) = try await URLSession.shared.data(for: pollReq)
+                    calls += 1
+                    let c2 = (r2 as? HTTPURLResponse)?.statusCode ?? 0
+                    if c2 == 200 {
+                        if workingIncompletePath != path {
+                            workingIncompletePath = path
+                            UserDefaults.standard.set(path, forKey: Self.incompletePathKey)
+                        }
+                        lastData = d2
+                        offers = Self.parseOffers(data: d2, currency: currency)
+                        status = Self.contextStatus(data: d2) ?? status
+                        got200 = true
+                        break
+                    } else {
+                        note = "poll \(path) → HTTP \(c2): \(String((String(data: d2, encoding: .utf8) ?? "").prefix(160)))"
+                        if c2 == 429 { break pollRounds }  // quota — stop now
+                        // otherwise try the next candidate path
+                    }
+                }
+                if !got200 { break }                       // no path worked this round
                 if !offers.isEmpty && status == "complete" { break }
             }
         }
 
-        let head = String((String(data: lastData, encoding: .utf8) ?? "").prefix(500))
-        return SearchResult(offers: offers, status: status, httpCode: code, rawHead: head, calls: calls)
+        let head = String((String(data: lastData, encoding: .utf8) ?? "").prefix(450))
+        return SearchResult(offers: offers, status: status, httpCode: code,
+                            rawHead: head, calls: calls, note: note)
     }
 
     func searchRoundTrip(origin: String,
@@ -229,7 +263,8 @@ actor SkyscannerClient: FlightProvider {
         if let cheapest = r.offers.map({ $0.price.amount }).min() {
             return "✅ Works! \(origin)→\(destination): \(r.offers.count) offers, cheapest \(Int(cheapest)) \(currency) (status: \(r.status), \(r.calls) calls)."
         }
-        return "⚠️ \(r.offers.count) offers after \(r.calls) calls (status: \(r.status)). Raw head:\n\(r.rawHead)"
+        let noteLine = r.note.map { "\nPoll error: \($0)" } ?? ""
+        return "⚠️ 0 offers after \(r.calls) calls (status: \(r.status)).\(noteLine)\nRaw head:\n\(r.rawHead)"
     }
 
     // MARK: Defensive JSON -> neutral RawOffer (no strict Codable, tolerates
