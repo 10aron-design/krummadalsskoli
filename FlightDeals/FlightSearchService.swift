@@ -159,38 +159,81 @@ struct FlightSearchService {
         return Array(Set([lo, mid, hi])).sorted()
     }
 
-    /// Full flexible scan. Returns every deal found, traps included
-    /// (caller decides what to notify on). `onProgress` is optional UI feedback.
+    /// One unit of work: a single round-trip API search.
+    struct ScanJob {
+        let origin: String
+        let destination: String
+        let departure: Date
+        let nights: Int
+    }
+
+    /// Every job the flexible window *could* probe, before budgeting.
+    func allJobs() -> [ScanJob] {
+        let cal = Calendar.current
+        var jobs: [ScanJob] = []
+        for origin in config.originCodes {
+            for destination in config.destinationCodes {
+                for dep in candidateDepartures() {
+                    for nights in candidateTripLengths() {
+                        if cal.date(byAdding: .day, value: nights, to: dep) != nil {
+                            jobs.append(ScanJob(origin: origin, destination: destination,
+                                                departure: dep, nights: nights))
+                        }
+                    }
+                }
+            }
+        }
+        return jobs
+    }
+
+    /// Trims the job list down to the call budget by sampling evenly across
+    /// the whole window (so we still cover the full date range, just sparser).
+    func budgetedJobs() -> [ScanJob] {
+        let jobs = allJobs()
+        let budget = max(1, config.maxRequestsPerScan)
+        guard jobs.count > budget else { return jobs }
+        let stride = Double(jobs.count) / Double(budget)
+        var picked: [ScanJob] = []
+        var i = 0.0
+        while Int(i) < jobs.count && picked.count < budget {
+            picked.append(jobs[Int(i)])
+            i += stride
+        }
+        return picked
+    }
+
+    /// Full flexible scan, capped at `config.maxRequestsPerScan` API calls so a
+    /// single run can never blow your monthly quota. Returns every deal found,
+    /// traps included. `onProgress` is optional UI feedback.
     func runFullScan(onProgress: ((String) -> Void)? = nil) async -> (deals: [FlightDeal], error: String?) {
         var results: [FlightDeal] = []
         var lastError: String?
         let cal = Calendar.current
 
-        for origin in config.originCodes {
-            for destination in config.destinationCodes {
-                for dep in candidateDepartures() {
-                    for nights in candidateTripLengths() {
-                        guard let ret = cal.date(byAdding: .day, value: nights, to: dep) else { continue }
-                        onProgress?("\(origin)→\(destination)  \(dep.ymd) (+\(nights)n)")
-                        do {
-                            let raw = try await client.searchRoundTrip(
-                                origin: origin, destination: destination,
-                                departure: dep, returnDate: ret,
-                                adults: config.adults, nonStop: config.nonStopOnly,
-                                currency: config.preferredCurrency, max: 5)
-                            for offer in raw {
-                                results.append(Self.normalize(
-                                    offer, origin: origin, destination: destination,
-                                    departure: dep, returnDate: ret, config: config))
-                            }
-                        } catch {
-                            lastError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-                        }
-                        // Be polite to the rate limiter.
-                        try? await Task.sleep(nanoseconds: 250_000_000)
-                    }
+        let jobs = budgetedJobs()
+        for (index, job) in jobs.enumerated() {
+            guard let ret = cal.date(byAdding: .day, value: job.nights, to: job.departure) else { continue }
+            onProgress?("[\(index + 1)/\(jobs.count)] \(job.origin)→\(job.destination)  \(job.departure.ymd) (+\(job.nights)n)")
+            do {
+                let raw = try await client.searchRoundTrip(
+                    origin: job.origin, destination: job.destination,
+                    departure: job.departure, returnDate: ret,
+                    adults: config.adults, nonStop: config.nonStopOnly,
+                    currency: config.preferredCurrency, max: 5)
+                for offer in raw {
+                    results.append(Self.normalize(
+                        offer, origin: job.origin, destination: job.destination,
+                        departure: job.departure, returnDate: ret, config: config))
                 }
+            } catch {
+                let msg = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                lastError = msg
+                // If we hit the quota/rate limit, stop immediately — hammering
+                // it further is pointless and just wastes calls.
+                if msg.contains("429") || msg.lowercased().contains("quota") { break }
             }
+            // Be polite to the rate limiter.
+            try? await Task.sleep(nanoseconds: 250_000_000)
         }
 
         // Cheapest first, de-duplicated by id.

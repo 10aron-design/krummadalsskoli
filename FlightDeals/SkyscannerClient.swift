@@ -50,13 +50,32 @@ protocol FlightProvider {
 /// then maps the nested JSON into our provider-neutral RawOffer.
 actor SkyscannerClient: FlightProvider {
     private var creds: SkyscannerCredentials
-    private var airportCache: [String: (skyId: String, entityId: String)] = [:]
+    private var airportCache: [String: AirportID]
 
-    init(creds: SkyscannerCredentials) { self.creds = creds }
+    /// Codable airport id pair so we can persist the cache across launches /
+    /// background runs and avoid burning quota re-resolving the same airports.
+    struct AirportID: Codable { let skyId: String; let entityId: String }
+    private static let cacheKey = "skyscanner.airportCache"
+
+    init(creds: SkyscannerCredentials) {
+        self.creds = creds
+        if let data = UserDefaults.standard.data(forKey: Self.cacheKey),
+           let cached = try? JSONDecoder().decode([String: AirportID].self, from: data) {
+            self.airportCache = cached
+        } else {
+            self.airportCache = [:]
+        }
+    }
+
+    private func saveCache() {
+        if let data = try? JSONEncoder().encode(airportCache) {
+            UserDefaults.standard.set(data, forKey: Self.cacheKey)
+        }
+    }
 
     func update(creds: SkyscannerCredentials) {
         self.creds = creds
-        self.airportCache.removeAll()
+        // Keep the airport cache — codes resolve to the same ids regardless of key.
     }
 
     private func makeRequest(path: String, query: [URLQueryItem]) throws -> URLRequest {
@@ -74,7 +93,7 @@ actor SkyscannerClient: FlightProvider {
 
     // MARK: Airport resolution
 
-    private func resolveAirport(_ code: String) async throws -> (skyId: String, entityId: String) {
+    private func resolveAirport(_ code: String) async throws -> AirportID {
         if let cached = airportCache[code] { return cached }
         let req = try makeRequest(
             path: "/api/v1/flights/searchAirport",
@@ -88,8 +107,9 @@ actor SkyscannerClient: FlightProvider {
         do {
             let decoded = try JSONDecoder().decode(SkyAirportResponse.self, from: data)
             guard let first = decoded.data.first else { throw FlightAPIError.airportNotFound(code) }
-            let pair = (skyId: first.skyId, entityId: first.entityId)
+            let pair = AirportID(skyId: first.skyId, entityId: first.entityId)
             airportCache[code] = pair
+            saveCache()
             return pair
         } catch let e as FlightAPIError {
             throw e

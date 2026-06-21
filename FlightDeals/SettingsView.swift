@@ -57,10 +57,12 @@ struct SettingsView: View {
                     value: $store.config.maxTripNights, in: 1...90)
             Stepper("Sample every \(store.config.samplingStepDays) days",
                     value: $store.config.samplingStepDays, in: 1...14)
+            Stepper("Max API calls per scan: \(store.config.maxRequestsPerScan)",
+                    value: $store.config.maxRequestsPerScan, in: 1...100)
         } header: {
             Text("Flexible dates")
         } footer: {
-            Text("We scan every Nth day between the two months and try a few trip lengths. Smaller steps = more thorough but more API calls.")
+            Text("We scan every Nth day between the two months and try a few trip lengths, spread evenly to fit the call budget. ⚠️ Free RapidAPI plans cap you at ~100 requests/MONTH — keep \"Max API calls per scan\" low (e.g. 10) and run scans sparingly, or you'll burn the whole month in one go.")
         }
     }
 
