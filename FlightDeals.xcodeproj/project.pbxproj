@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		BF0000000000000000000001 /* FlightDealsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000001 /* FlightDealsApp.swift */; };
 		BF0000000000000000000002 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000002 /* Models.swift */; };
-		BF0000000000000000000003 /* AmadeusClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000003 /* AmadeusClient.swift */; };
+		BF0000000000000000000003 /* SkyscannerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000003 /* SkyscannerClient.swift */; };
 		BF0000000000000000000004 /* FlightSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000004 /* FlightSearchService.swift */; };
 		BF0000000000000000000005 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000005 /* NotificationManager.swift */; };
 		BF0000000000000000000006 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000006 /* AppStore.swift */; };
@@ -22,7 +22,7 @@
 /* Begin PBXFileReference section */
 		FA0000000000000000000001 /* FlightDealsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlightDealsApp.swift; sourceTree = "<group>"; };
 		FA0000000000000000000002 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
-		FA0000000000000000000003 /* AmadeusClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmadeusClient.swift; sourceTree = "<group>"; };
+		FA0000000000000000000003 /* SkyscannerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyscannerClient.swift; sourceTree = "<group>"; };
 		FA0000000000000000000004 /* FlightSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlightSearchService.swift; sourceTree = "<group>"; };
 		FA0000000000000000000005 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		FA0000000000000000000006 /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
@@ -58,7 +58,7 @@
 			children = (
 				FA0000000000000000000001 /* FlightDealsApp.swift */,
 				FA0000000000000000000002 /* Models.swift */,
-				FA0000000000000000000003 /* AmadeusClient.swift */,
+				FA0000000000000000000003 /* SkyscannerClient.swift */,
 				FA0000000000000000000004 /* FlightSearchService.swift */,
 				FA0000000000000000000005 /* NotificationManager.swift */,
 				FA0000000000000000000006 /* AppStore.swift */,
@@ -150,7 +150,7 @@
 			files = (
 				BF0000000000000000000001 /* FlightDealsApp.swift in Sources */,
 				BF0000000000000000000002 /* Models.swift in Sources */,
-				BF0000000000000000000003 /* AmadeusClient.swift in Sources */,
+				BF0000000000000000000003 /* SkyscannerClient.swift in Sources */,
 				BF0000000000000000000004 /* FlightSearchService.swift in Sources */,
 				BF0000000000000000000005 /* NotificationManager.swift in Sources */,
 				BF0000000000000000000006 /* AppStore.swift in Sources */,

@@ -46,14 +46,14 @@ final class BackgroundScheduler {
     static func runStandaloneScan() async {
         guard
             let credsData = UserDefaults.standard.data(forKey: AppStore.Keys.creds),
-            let creds = try? JSONDecoder().decode(AmadeusCredentials.self, from: credsData),
+            let creds = try? JSONDecoder().decode(SkyscannerCredentials.self, from: credsData),
             creds.isConfigured
         else { return }
 
         let cfg = (UserDefaults.standard.data(forKey: AppStore.Keys.config)
             .flatMap { try? JSONDecoder().decode(SearchConfig.self, from: $0) }) ?? SearchConfig()
 
-        let client = AmadeusClient(creds: creds)
+        let client = SkyscannerClient(creds: creds)
         let service = FlightSearchService(client: client, config: cfg)
         let (found, _) = await service.runFullScan()
 

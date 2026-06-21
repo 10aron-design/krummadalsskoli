@@ -102,3 +102,38 @@ extension Date {
         return f.string(from: self)
     }
 }
+
+// MARK: - Provider-neutral "raw" offer.
+// Every flight provider (Skyscanner, etc.) maps its JSON into these structs,
+// so the search + trap-detection logic never has to care where data came from.
+
+struct RawOffer {
+    var price: RawPrice
+    var itineraries: [RawItinerary]      // [0] = outbound, [1] = inbound
+    var validatingAirlineCodes: [String]?
+}
+
+struct RawPrice {
+    var amount: Double
+    var currency: String?
+}
+
+struct RawItinerary {
+    var duration: String                 // ISO-8601 like "PT14H30M"
+    var segments: [RawSegment]
+}
+
+struct RawSegment {
+    var departure: RawPoint
+    var arrival: RawPoint
+    var carrierCode: String              // marketing carrier (e.g. "FI")
+    var operating: RawOperating?
+    var numberOfStops: Int?
+}
+
+struct RawOperating { var carrierCode: String? }
+
+struct RawPoint {
+    var iataCode: String
+    var at: String                       // "2026-08-12T16:40:00"
+}

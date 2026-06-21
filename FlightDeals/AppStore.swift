@@ -6,7 +6,7 @@ import Combine
 @MainActor
 final class AppStore: ObservableObject {
     @Published var config: SearchConfig { didSet { persist(config, key: Keys.config) } }
-    @Published var creds: AmadeusCredentials { didSet { persist(creds, key: Keys.creds); rebuildClient() } }
+    @Published var creds: SkyscannerCredentials { didSet { persist(creds, key: Keys.creds); rebuildClient() } }
     @Published private(set) var deals: [FlightDeal] { didSet { persist(deals, key: Keys.deals) } }
 
     @Published var isScanning = false
@@ -14,23 +14,23 @@ final class AppStore: ObservableObject {
     @Published var lastScanDate: Date?
     @Published var lastError: String?
 
-    private var client: AmadeusClient
+    private var client: SkyscannerClient
 
     enum Keys {
         static let config = "search.config"
-        static let creds  = "amadeus.creds"
+        static let creds  = "skyscanner.creds"
         static let deals  = "found.deals"
         static let lastScan = "last.scan.date"
     }
 
     init() {
         let cfg = Self.load(SearchConfig.self, key: Keys.config) ?? SearchConfig()
-        let cr  = Self.load(AmadeusCredentials.self, key: Keys.creds) ?? AmadeusCredentials()
+        let cr  = Self.load(SkyscannerCredentials.self, key: Keys.creds) ?? SkyscannerCredentials()
         self.config = cfg
         self.creds  = cr
         self.deals  = Self.load([FlightDeal].self, key: Keys.deals) ?? []
         self.lastScanDate = UserDefaults.standard.object(forKey: Keys.lastScan) as? Date
-        self.client = AmadeusClient(creds: cr)
+        self.client = SkyscannerClient(creds: cr)
     }
 
     private func rebuildClient() {
@@ -42,7 +42,7 @@ final class AppStore: ObservableObject {
     func runScan() async {
         guard !isScanning else { return }
         guard creds.isConfigured else {
-            lastError = AmadeusError.notConfigured.errorDescription
+            lastError = FlightAPIError.notConfigured.errorDescription
             return
         }
         isScanning = true

@@ -1,9 +1,9 @@
 import Foundation
 
-/// Turns raw Amadeus offers into clean FlightDeals, scans flexible date
+/// Turns raw provider offers into clean FlightDeals, scans flexible date
 /// windows, and stamps trap reasons on each deal.
 struct FlightSearchService {
-    let client: AmadeusClient
+    let client: FlightProvider
     let config: SearchConfig
 
     /// ISO-8601 duration ("PT14H30M") -> hours as a Double.
@@ -177,7 +177,7 @@ struct FlightSearchService {
                                 origin: origin, destination: destination,
                                 departure: dep, returnDate: ret,
                                 adults: config.adults, nonStop: config.nonStopOnly,
-                                currency: config.preferredCurrency)
+                                currency: config.preferredCurrency, max: 5)
                             for offer in raw {
                                 results.append(Self.normalize(
                                     offer, origin: origin, destination: destination,

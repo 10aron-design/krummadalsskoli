@@ -19,14 +19,16 @@ struct SettingsView: View {
 
     private var apiSection: some View {
         Section {
-            TextField("Amadeus Client ID", text: $store.creds.clientId)
+            SecureField("X-RapidAPI-Key", text: $store.creds.rapidApiKey)
                 .textInputAutocapitalization(.never).autocorrectionDisabled()
-            SecureField("Amadeus Client Secret", text: $store.creds.clientSecret)
-            Toggle("Use production prices", isOn: $store.creds.useProduction)
+            TextField("RapidAPI host", text: $store.creds.rapidApiHost)
+                .textInputAutocapitalization(.never).autocorrectionDisabled()
+            TextField("Market", text: $store.creds.market)
+                .textInputAutocapitalization(.characters)
         } header: {
-            Text("API key")
+            Text("Skyscanner API key")
         } footer: {
-            Text("Free keys at developers.amadeus.com → create a Self-Service app. Test mode has limited routes; flip to production for real fares.")
+            Text("Get a free key at rapidapi.com → subscribe to the \"Sky-Scrapper\" API → copy your X-RapidAPI-Key. Keep the host as sky-scrapper.p.rapidapi.com unless you picked a different Skyscanner listing.")
         }
     }
 

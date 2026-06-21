@@ -31,20 +31,25 @@ genuinely good deal** — not a trap.
 - **Settings** tab: API key, route, flexible date window, price threshold, and
   all the trap-filter rules.
 
-## 1. Get a free flight-data API key (Amadeus)
+## 1. Get a free flight-data API key (Skyscanner via RapidAPI)
 
-The app uses the **Amadeus Self-Service API** (free tier).
+The app reads **Skyscanner** flight data through the **"Sky-Scrapper"** API on
+RapidAPI (free tier — no OAuth, no partner approval).
 
-1. Go to <https://developers.amadeus.com> and create an account.
-2. Create a **Self-Service app** to get a **Client ID** and **Client Secret**.
-3. In the app → **Settings** → paste both keys.
-4. Leave *"Use production prices"* **off** while testing (the test environment
-   has limited/cached data). Turn it **on** for real live fares — production
-   keys are still free up to a monthly quota.
+1. Make a free account at <https://rapidapi.com>.
+2. Open the **[Sky-Scrapper](https://rapidapi.com/apiheya/api/sky-scrapper)**
+   API page and click **Subscribe to Test** → pick the **Basic (free)** plan.
+3. On any endpoint page, copy your **`X-RapidAPI-Key`** (the long string in the
+   code snippet / your RapidAPI dashboard).
+4. In the app → **Settings → Skyscanner API key** → paste the key. Leave the
+   host as `sky-scrapper.p.rapidapi.com`.
 
-> Want a different provider (Kiwi/Tequila, Travelpayouts, etc.)? Swap the
-> implementation in `AmadeusClient.swift` — the rest of the app talks to it
-> through `FlightSearchService` and doesn't care where the data comes from.
+> The app resolves your airport codes (KEF, TYO, OSA…) to Skyscanner IDs
+> automatically, then searches round-trips across your flexible date window.
+>
+> Want a different provider? Write another `FlightProvider` conformer (see
+> `SkyscannerClient.swift`) — the search + trap logic doesn't care where data
+> comes from.
 
 ## 2. Build & sideload onto your iPhone
 
@@ -91,7 +96,7 @@ needs a Mac. So let a **cloud Mac on GitHub Actions** build the `.ipa` for you:
    - iPhone → **Settings → General → VPN & Device Management** → tap your
      Apple ID → **Trust**.
 
-5. **Open the app**, paste your Amadeus key in Settings, tap Scan.
+5. **Open the app**, paste your RapidAPI (Skyscanner) key in Settings, tap Scan.
 
 > ⏳ Free Apple ID limits: the app signature expires after **7 days** and you
 > can have max 3 sideloaded apps. To refresh, just re-run Sideloadly with the
@@ -134,7 +139,7 @@ xcodebuild -project FlightDeals.xcodeproj -scheme FlightDeals \
 FlightDeals/
   FlightDealsApp.swift        App entry, registers background task
   Models.swift                SearchConfig, FlightDeal, TrapReason
-  AmadeusClient.swift         OAuth + Flight Offers Search networking
+  SkyscannerClient.swift      Skyscanner (RapidAPI) search + JSON mapping
   FlightSearchService.swift   Flexible-date scan + trap detection (the brain)
   NotificationManager.swift   Local notifications
   AppStore.swift              Observable state + persistence (UserDefaults)
@@ -146,8 +151,9 @@ FlightDeals/
 
 ## Notes / limits
 
-- Test-mode Amadeus data is limited; if you see few or no results, add your
-  **production** keys and toggle production on.
+- The free RapidAPI tier has a monthly request cap. The flexible scan makes
+  several calls per run (one per sampled date × trip length), so widen the
+  **"Sample every N days"** setting if you hit the limit.
 - The "self-transfer" check is a heuristic (more than one distinct carrier on a
   connecting leg). Real codeshares may occasionally trip it — loosen it in
   Settings if needed.
