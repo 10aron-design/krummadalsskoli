@@ -154,9 +154,14 @@ FlightDeals/
 
 ## Notes / limits
 
-- The free RapidAPI tier has a monthly request cap. The flexible scan makes
-  several calls per run (one per sampled date × trip length), so widen the
-  **"Sample every N days"** setting if you hit the limit.
+- The free RapidAPI tier has a small monthly request cap, and **failed requests
+  still count against it**. Use **Settings → "Test API (1 call)"** to confirm
+  your key/route works before running a full scan.
+- Each scan is capped by **"Max API calls per scan"** (default 12) and samples
+  dates evenly to fit that budget, so one scan can't drain your whole month.
+  Lower it (e.g. 5) to stretch the free tier further.
+- True daily background scanning needs more quota than the free tier provides —
+  expect to use a paid RapidAPI plan for hands-off daily runs.
 - The "self-transfer" check is a heuristic (more than one distinct carrier on a
   connecting leg). Real codeshares may occasionally trip it — loosen it in
   Settings if needed.

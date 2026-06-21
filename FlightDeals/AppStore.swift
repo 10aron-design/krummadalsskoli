@@ -65,6 +65,39 @@ final class AppStore: ObservableObject {
         }
     }
 
+    /// Fires exactly ONE API search so you can verify your key + endpoint
+    /// without spending a whole scan's worth of quota.
+    func testAPI() async {
+        guard !isScanning else { return }
+        guard creds.isConfigured else {
+            lastError = FlightAPIError.notConfigured.errorDescription
+            return
+        }
+        isScanning = true
+        progressText = "Testing API with 1 request…"
+        lastError = nil
+        defer { isScanning = false }
+
+        let origin = config.originCodes.first ?? "KEF"
+        let destination = config.destinationCodes.first ?? "TYO"
+        let dep = Calendar.current.date(byAdding: .day, value: 45, to: Date()) ?? Date()
+        let ret = Calendar.current.date(byAdding: .day, value: config.minTripNights, to: dep) ?? dep
+        do {
+            let raw = try await client.searchRoundTrip(
+                origin: origin, destination: destination,
+                departure: dep, returnDate: ret,
+                adults: config.adults, nonStop: config.nonStopOnly,
+                currency: config.preferredCurrency, max: 3)
+            if let cheapest = raw.map({ $0.price.amount }).min() {
+                lastError = "✅ API works! \(origin)→\(destination) returned \(raw.count) offers, cheapest \(Int(cheapest)) \(config.preferredCurrency). (uses ~1–2 calls)"
+            } else {
+                lastError = "⚠️ API reachable but returned 0 offers for \(origin)→\(destination) on \(dep.ymd). Try a different route/date or check your plan's coverage."
+            }
+        } catch {
+            lastError = "❌ " + ((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+        }
+    }
+
     var goodDeals: [FlightDeal] { FlightSearchService.goodDeals(from: deals, config: config) }
     var trapDeals: [FlightDeal] { deals.filter { $0.isTrap } }
 

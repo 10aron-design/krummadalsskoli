@@ -97,15 +97,27 @@ struct SettingsView: View {
     }
 
     private var aboutSection: some View {
-        Section("About") {
+        Section {
+            Button {
+                Task { await store.testAPI() }
+            } label: {
+                Label("Test API (1 call)", systemImage: "checkmark.seal")
+            }
+            .disabled(store.isScanning)
             Button {
                 Task { await store.runScan() }
             } label: {
-                Label("Run scan now", systemImage: "magnifyingglass")
+                Label("Run full scan now", systemImage: "magnifyingglass")
             }
             .disabled(store.isScanning)
-            Text("Background scan runs ~once a day when iOS allows. Keep notifications enabled.")
-                .font(.caption).foregroundStyle(.secondary)
+            if let msg = store.lastError {
+                Text(msg).font(.caption)
+                    .foregroundStyle(msg.hasPrefix("✅") ? .green : .orange)
+            }
+        } header: {
+            Text("About")
+        } footer: {
+            Text("Tap \"Test API\" first — it spends only ~1 request to confirm your key works before you run a full scan. Background scan runs ~once a day when iOS allows; keep notifications enabled.")
         }
     }
 }

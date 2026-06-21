@@ -132,7 +132,7 @@ actor SkyscannerClient: FlightProvider {
         let to = try await resolveAirport(destination)
 
         let req = try makeRequest(
-            path: "/api/v2/flights/searchFlights",
+            path: "/api/v1/flights/searchFlights",
             query: [
                 .init(name: "originSkyId", value: from.skyId),
                 .init(name: "destinationSkyId", value: to.skyId),
