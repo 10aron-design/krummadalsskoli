@@ -235,7 +235,7 @@ actor SkyscannerClient: FlightProvider {
     static func parseOffers(data: Data, currency: String) -> [RawOffer] {
         guard
             let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let d = obj?["data"] as? [String: Any],
+            let d = obj["data"] as? [String: Any],
             let itins = d["itineraries"] as? [[String: Any]]
         else { return [] }
 
