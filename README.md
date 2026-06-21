@@ -74,13 +74,16 @@ You need a Mac with **Xcode**.
 Sideloadly signs & installs an `.ipa`, but it can't *build* Swift code — that
 needs a Mac. So let a **cloud Mac on GitHub Actions** build the `.ipa` for you:
 
-1. **Build the IPA in the cloud**
-   - Go to the repo on GitHub → **Actions** tab.
-   - Pick **"Build unsigned IPA"** → **Run workflow** (on branch
-     `claude/modest-sagan-t3836u`). It also runs automatically on every push.
-   - Wait ~3–5 min for the green check.
-   - Open the finished run → **Artifacts** → download **`FlightDeals-ipa`**
-     (a zip). Unzip it to get **`FlightDeals.ipa`**.
+1. **Get the IPA from the cloud build**
+   - The workflow builds it automatically on every push (or run it manually:
+     repo → **Actions** → **"Build unsigned IPA"** → **Run workflow**).
+   - **Easiest:** repo → **Releases** → **"Latest sideload IPA"** → download the
+     **`FlightDeals.ipa`** asset. This is a *plain* `.ipa` — drag it straight
+     into Sideloadly, **no unzip needed**.
+   - Alternative: run → **Artifacts** → **`FlightDeals-ipa`**. ⚠️ This downloads
+     as a **`.zip`** — you MUST extract it first and use the inner
+     `FlightDeals.ipa`. Feeding the zip itself to Sideloadly causes the
+     *"Can't listdir a file"* error.
 
 2. **Install Sideloadly on Windows** from <https://sideloadly.io>
    (also install **iTunes** + **iCloud** from Apple's site, not the Microsoft
