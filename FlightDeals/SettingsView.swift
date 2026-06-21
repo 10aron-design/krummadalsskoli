@@ -113,6 +113,7 @@ struct SettingsView: View {
             if let msg = store.lastError {
                 Text(msg).font(.caption)
                     .foregroundStyle(msg.hasPrefix("✅") ? .green : .orange)
+                    .textSelection(.enabled)   // long-press to copy & share with support
             }
         } header: {
             Text("About")

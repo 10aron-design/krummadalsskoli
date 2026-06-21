@@ -104,18 +104,20 @@ actor SkyscannerClient: FlightProvider {
         guard http.statusCode == 200 else {
             throw FlightAPIError.http(http.statusCode, String(data: data, encoding: .utf8) ?? "")
         }
-        do {
-            let decoded = try JSONDecoder().decode(SkyAirportResponse.self, from: data)
-            guard let first = decoded.data.first else { throw FlightAPIError.airportNotFound(code) }
-            let pair = AirportID(skyId: first.skyId, entityId: first.entityId)
-            airportCache[code] = pair
-            saveCache()
-            return pair
-        } catch let e as FlightAPIError {
-            throw e
-        } catch {
-            throw FlightAPIError.decoding(error.localizedDescription)
-        }
+        // Defensive parse: searchAirport returns { data: [ { skyId, entityId, ... } ] }.
+        let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let arr = obj?["data"] as? [[String: Any]]
+        guard let first = arr?.first else { throw FlightAPIError.airportNotFound(code) }
+        // skyId / entityId may live at the top level or under navigation.
+        let nav = first["navigation"] as? [String: Any]
+        let params = nav?["relevantFlightParams"] as? [String: Any]
+        let skyId = Self.str(first["skyId"]) ?? Self.str(params?["skyId"])
+        let entityId = Self.str(first["entityId"]) ?? Self.str(nav?["entityId"]) ?? Self.str(params?["entityId"])
+        guard let skyId, let entityId else { throw FlightAPIError.airportNotFound(code) }
+        let pair = AirportID(skyId: skyId, entityId: entityId)
+        airportCache[code] = pair
+        saveCache()
+        return pair
     }
 
     // MARK: Round-trip search
@@ -153,84 +155,126 @@ actor SkyscannerClient: FlightProvider {
         guard http.statusCode == 200 else {
             throw FlightAPIError.http(http.statusCode, String(data: data, encoding: .utf8) ?? "")
         }
-        do {
-            let decoded = try JSONDecoder().decode(SkyFlightsResponse.self, from: data)
-            let itineraries = decoded.data?.itineraries ?? []
-            var offers = itineraries.compactMap { Self.mapToRawOffer($0, currency: currency) }
-            if nonStop {
-                offers = offers.filter { offer in
-                    offer.itineraries.allSatisfy { ($0.segments.count - 1) <= 0 }
+        var offers = Self.parseOffers(data: data, currency: currency)
+        if nonStop {
+            offers = offers.filter { offer in
+                offer.itineraries.allSatisfy { ($0.segments.count - 1) <= 0 }
+            }
+        }
+        return Array(offers.prefix(max))
+    }
+
+    /// Fires ONE search and returns a human-readable diagnosis: HTTP code,
+    /// resolved airport ids, search status, offers parsed, and — if nothing
+    /// parsed — a snippet of the raw JSON so the shape can be inspected.
+    func diagnose(origin: String, destination: String,
+                  departure: Date, returnDate: Date,
+                  adults: Int, currency: String) async throws -> String {
+        let from = try await resolveAirport(origin)
+        let to = try await resolveAirport(destination)
+        let req = try makeRequest(
+            path: "/api/v1/flights/searchFlights",
+            query: [
+                .init(name: "originSkyId", value: from.skyId),
+                .init(name: "destinationSkyId", value: to.skyId),
+                .init(name: "originEntityId", value: from.entityId),
+                .init(name: "destinationEntityId", value: to.entityId),
+                .init(name: "date", value: departure.ymd),
+                .init(name: "returnDate", value: returnDate.ymd),
+                .init(name: "cabinClass", value: "economy"),
+                .init(name: "adults", value: String(adults)),
+                .init(name: "sortBy", value: "best"),
+                .init(name: "currency", value: currency),
+                .init(name: "market", value: creds.market),
+                .init(name: "countryCode", value: creds.market)
+            ])
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
+        guard code == 200 else {
+            let body = String(data: data, encoding: .utf8) ?? ""
+            return "❌ HTTP \(code): \(String(body.prefix(200)))"
+        }
+        let offers = Self.parseOffers(data: data, currency: currency)
+        let status = Self.contextStatus(data: data) ?? "unknown"
+        if let cheapest = offers.map({ $0.price.amount }).min() {
+            return "✅ Works! \(origin)→\(destination): \(offers.count) offers, cheapest \(Int(cheapest)) \(currency) (status: \(status))."
+        }
+        let body = String(data: data, encoding: .utf8) ?? "<non-text>"
+        return "⚠️ HTTP 200 but 0 offers parsed (status: \(status)). Raw head:\n\(String(body.prefix(500)))"
+    }
+
+    // MARK: Defensive JSON -> neutral RawOffer (no strict Codable, tolerates
+    // missing / renamed fields so the app never hard-fails on shape drift).
+
+    static func str(_ v: Any?) -> String? {
+        if let s = v as? String { return s }
+        if let n = v as? NSNumber { return n.stringValue }
+        return nil
+    }
+    static func dbl(_ v: Any?) -> Double? {
+        if let n = v as? NSNumber { return n.doubleValue }
+        if let s = v as? String { return Double(s) }
+        return nil
+    }
+    static func int(_ v: Any?) -> Int? {
+        if let n = v as? NSNumber { return n.intValue }
+        if let s = v as? String { return Int(s) }
+        return nil
+    }
+
+    private static func iso(minutes: Int) -> String { "PT\(minutes / 60)H\(minutes % 60)M" }
+
+    /// Status of the search ("complete"/"incomplete") if present — useful info.
+    static func contextStatus(data: Data) -> String? {
+        let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let d = obj?["data"] as? [String: Any]
+        let ctx = d?["context"] as? [String: Any]
+        return str(ctx?["status"])
+    }
+
+    static func parseOffers(data: Data, currency: String) -> [RawOffer] {
+        guard
+            let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let d = obj?["data"] as? [String: Any],
+            let itins = d["itineraries"] as? [[String: Any]]
+        else { return [] }
+
+        return itins.compactMap { it -> RawOffer? in
+            let priceObj = it["price"] as? [String: Any]
+            guard let amount = dbl(priceObj?["raw"]) else { return nil }
+            let legsArr = it["legs"] as? [[String: Any]] ?? []
+            let legs: [RawItinerary] = legsArr.map { leg in
+                let segsArr = leg["segments"] as? [[String: Any]] ?? []
+                let segs: [RawSegment] = segsArr.map { seg in
+                    let o = seg["origin"] as? [String: Any]
+                    let dst = seg["destination"] as? [String: Any]
+                    let mc = seg["marketingCarrier"] as? [String: Any]
+                    let oc = seg["operatingCarrier"] as? [String: Any]
+                    return RawSegment(
+                        departure: RawPoint(iataCode: str(o?["displayCode"]) ?? str(o?["flightPlaceId"]) ?? "",
+                                            at: str(seg["departure"]) ?? ""),
+                        arrival: RawPoint(iataCode: str(dst?["displayCode"]) ?? str(dst?["flightPlaceId"]) ?? "",
+                                          at: str(seg["arrival"]) ?? ""),
+                        carrierCode: str(mc?["alternateId"]) ?? str(mc?["name"]) ?? "",
+                        operating: RawOperating(carrierCode: str(oc?["alternateId"])),
+                        numberOfStops: 0)
                 }
+                // Prefer real segment count; fall back to stopCount if segments absent.
+                let duration = iso(minutes: int(leg["durationInMinutes"]) ?? 0)
+                if segs.isEmpty, let stops = int(leg["stopCount"]) {
+                    // Fabricate placeholder segments so stop-count traps still work.
+                    let placeholders = (0...max(0, stops)).map { _ in
+                        RawSegment(departure: RawPoint(iataCode: "", at: ""),
+                                   arrival: RawPoint(iataCode: "", at: ""),
+                                   carrierCode: "", operating: nil, numberOfStops: 0)
+                    }
+                    return RawItinerary(duration: duration, segments: placeholders)
+                }
+                return RawItinerary(duration: duration, segments: segs)
             }
-            return Array(offers.prefix(max))
-        } catch {
-            throw FlightAPIError.decoding(error.localizedDescription)
+            return RawOffer(price: RawPrice(amount: amount, currency: currency),
+                            itineraries: legs,
+                            validatingAirlineCodes: nil)
         }
     }
-
-    // MARK: Mapping Skyscanner JSON -> neutral RawOffer
-
-    private static func iso(minutes: Int) -> String {
-        "PT\(minutes / 60)H\(minutes % 60)M"
-    }
-
-    private static func mapToRawOffer(_ itin: SkyItinerary, currency: String) -> RawOffer? {
-        guard let price = itin.price?.raw else { return nil }
-        let legs: [RawItinerary] = itin.legs.map { leg in
-            let segs: [RawSegment] = leg.segments.map { seg in
-                RawSegment(
-                    departure: RawPoint(iataCode: seg.origin?.displayCode ?? seg.origin?.flightPlaceId ?? "",
-                                        at: seg.departure ?? ""),
-                    arrival: RawPoint(iataCode: seg.destination?.displayCode ?? seg.destination?.flightPlaceId ?? "",
-                                      at: seg.arrival ?? ""),
-                    carrierCode: seg.marketingCarrier?.alternateId ?? seg.marketingCarrier?.name ?? "",
-                    operating: RawOperating(carrierCode: seg.operatingCarrier?.alternateId),
-                    numberOfStops: 0)
-            }
-            return RawItinerary(duration: iso(minutes: leg.durationInMinutes ?? 0), segments: segs)
-        }
-        return RawOffer(
-            price: RawPrice(amount: price, currency: currency),
-            itineraries: legs,
-            validatingAirlineCodes: nil)
-    }
-}
-
-// MARK: - Skyscanner (Sky-Scrapper) JSON shapes (only what we use).
-
-struct SkyAirportResponse: Decodable { let data: [SkyAirport] }
-struct SkyAirport: Decodable { let skyId: String; let entityId: String }
-
-struct SkyFlightsResponse: Decodable { let data: SkyData? }
-struct SkyData: Decodable { let itineraries: [SkyItinerary]? }
-
-struct SkyItinerary: Decodable {
-    let price: SkyPrice?
-    let legs: [SkyLeg]
-}
-struct SkyPrice: Decodable { let raw: Double? }
-
-struct SkyLeg: Decodable {
-    let durationInMinutes: Int?
-    let stopCount: Int?
-    let segments: [SkySegment]
-}
-
-struct SkySegment: Decodable {
-    let origin: SkyPlace?
-    let destination: SkyPlace?
-    let departure: String?
-    let arrival: String?
-    let marketingCarrier: SkyCarrier?
-    let operatingCarrier: SkyCarrier?
-}
-
-struct SkyPlace: Decodable {
-    let flightPlaceId: String?
-    let displayCode: String?
-}
-
-struct SkyCarrier: Decodable {
-    let name: String?
-    let alternateId: String?    // usually the 2-letter IATA code
 }
