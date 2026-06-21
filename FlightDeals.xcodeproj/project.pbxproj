@@ -1,0 +1,288 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		BF0000000000000000000001 /* FlightDealsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000001 /* FlightDealsApp.swift */; };
+		BF0000000000000000000002 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000002 /* Models.swift */; };
+		BF0000000000000000000003 /* AmadeusClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000003 /* AmadeusClient.swift */; };
+		BF0000000000000000000004 /* FlightSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000004 /* FlightSearchService.swift */; };
+		BF0000000000000000000005 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000005 /* NotificationManager.swift */; };
+		BF0000000000000000000006 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000006 /* AppStore.swift */; };
+		BF0000000000000000000007 /* BackgroundScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000007 /* BackgroundScheduler.swift */; };
+		BF0000000000000000000008 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000008 /* ContentView.swift */; };
+		BF0000000000000000000009 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000009 /* SettingsView.swift */; };
+		BF0000000000000000000010 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000010 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		FA0000000000000000000001 /* FlightDealsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlightDealsApp.swift; sourceTree = "<group>"; };
+		FA0000000000000000000002 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		FA0000000000000000000003 /* AmadeusClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmadeusClient.swift; sourceTree = "<group>"; };
+		FA0000000000000000000004 /* FlightSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlightSearchService.swift; sourceTree = "<group>"; };
+		FA0000000000000000000005 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		FA0000000000000000000006 /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
+		FA0000000000000000000007 /* BackgroundScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundScheduler.swift; sourceTree = "<group>"; };
+		FA0000000000000000000008 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		FA0000000000000000000009 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		FA0000000000000000000010 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FA0000000000000000000011 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FA0000000000000000000012 /* FlightDeals.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlightDeals.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AD0000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA0000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000002 /* FlightDeals */,
+				AA0000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000002 /* FlightDeals */ = {
+			isa = PBXGroup;
+			children = (
+				FA0000000000000000000001 /* FlightDealsApp.swift */,
+				FA0000000000000000000002 /* Models.swift */,
+				FA0000000000000000000003 /* AmadeusClient.swift */,
+				FA0000000000000000000004 /* FlightSearchService.swift */,
+				FA0000000000000000000005 /* NotificationManager.swift */,
+				FA0000000000000000000006 /* AppStore.swift */,
+				FA0000000000000000000007 /* BackgroundScheduler.swift */,
+				FA0000000000000000000008 /* ContentView.swift */,
+				FA0000000000000000000009 /* SettingsView.swift */,
+				FA0000000000000000000010 /* Assets.xcassets */,
+				FA0000000000000000000011 /* Info.plist */,
+			);
+			path = FlightDeals;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FA0000000000000000000012 /* FlightDeals.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AC0000000000000000000001 /* FlightDeals */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AE0000000000000000000002 /* Build configuration list for PBXNativeTarget "FlightDeals" */;
+			buildPhases = (
+				AD0000000000000000000001 /* Sources */,
+				AD0000000000000000000002 /* Frameworks */,
+				AD0000000000000000000003 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FlightDeals;
+			productName = FlightDeals;
+			productReference = FA0000000000000000000012 /* FlightDeals.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AB0000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					AC0000000000000000000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = AE0000000000000000000001 /* Build configuration list for PBXProject "FlightDeals" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AA0000000000000000000001;
+			productRefGroup = AA0000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AC0000000000000000000001 /* FlightDeals */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AD0000000000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BF0000000000000000000010 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AD0000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BF0000000000000000000001 /* FlightDealsApp.swift in Sources */,
+				BF0000000000000000000002 /* Models.swift in Sources */,
+				BF0000000000000000000003 /* AmadeusClient.swift in Sources */,
+				BF0000000000000000000004 /* FlightSearchService.swift in Sources */,
+				BF0000000000000000000005 /* NotificationManager.swift in Sources */,
+				BF0000000000000000000006 /* AppStore.swift in Sources */,
+				BF0000000000000000000007 /* BackgroundScheduler.swift in Sources */,
+				BF0000000000000000000008 /* ContentView.swift in Sources */,
+				BF0000000000000000000009 /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		CF0000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		CF0000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		CF0000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FlightDeals/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.flightdeals.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CF0000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FlightDeals/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.flightdeals.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AE0000000000000000000001 /* Build configuration list for PBXProject "FlightDeals" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CF0000000000000000000001 /* Debug */,
+				CF0000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AE0000000000000000000002 /* Build configuration list for PBXNativeTarget "FlightDeals" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CF0000000000000000000003 /* Debug */,
+				CF0000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AB0000000000000000000001 /* Project object */;
+}
