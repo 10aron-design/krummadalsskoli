@@ -26,20 +26,22 @@ struct SettingsView: View {
             TextField("Market", text: $store.creds.market)
                 .textInputAutocapitalization(.characters)
         } header: {
-            Text("Skyscanner API key")
+            Label("Skyscanner API key", systemImage: "key.fill")
         } footer: {
             Text("Get a free key at rapidapi.com → subscribe to the \"Sky-Scrapper\" API → copy your X-RapidAPI-Key. Keep the host as sky-scrapper.p.rapidapi.com unless you picked a different Skyscanner listing.")
         }
     }
 
     private var routeSection: some View {
-        Section("Route") {
+        Section {
             CodeEditor(title: "From (IATA)", codes: $store.config.originCodes)
             CodeEditor(title: "To (IATA)", codes: $store.config.destinationCodes)
             Stepper("Adults: \(store.config.adults)", value: $store.config.adults, in: 1...9)
             Toggle("Non-stop only", isOn: $store.config.nonStopOnly)
             TextField("Currency", text: $store.config.preferredCurrency)
                 .textInputAutocapitalization(.characters)
+        } header: {
+            Label("Route", systemImage: "map.fill")
         }
     }
 
@@ -66,7 +68,7 @@ struct SettingsView: View {
             Stepper("Max searches per scan: \(store.config.maxRequestsPerScan)",
                     value: $store.config.maxRequestsPerScan, in: 1...50)
         } header: {
-            Text("Flexible dates")
+            Label("Flexible dates", systemImage: "calendar")
         } footer: {
             Text(store.config.usePriceCalendar
                  ? "Price-calendar mode asks Skyscanner for the cheapest fare on EVERY day with one cheap call per month, then only spends full searches on the cheapest days — so it matches Skyscanner's numbers and barely touches your quota. A search costs ~2–5 calls; the calendar costs 1. Free plans cap near ~100 calls/MONTH, so keep the cheapest-days count modest."
@@ -92,7 +94,7 @@ struct SettingsView: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
         } header: {
-            Text("What counts as a good deal")
+            Label("What counts as a good deal", systemImage: "tag.fill")
         } footer: {
             Text("Skyscanner shows per-person fares — keep this ON to match it. Iceland→Japan is rarely under ~700 \(store.config.preferredCurrency) per person, so set this realistically or \"Good deals\" stays empty.")
         }
@@ -109,7 +111,7 @@ struct SettingsView: View {
             Toggle("Reject self-transfer / mixed airlines", isOn: $store.config.rejectSelfTransfer)
             Toggle("Reject overnight layovers", isOn: $store.config.rejectOvernightLayover)
         } header: {
-            Text("Trap filter 🪤")
+            Label("Trap filter", systemImage: "exclamationmark.shield.fill")
         } footer: {
             Text("Cheap fares that hide 52-hour journeys, unconnected airlines, or overnight airport sleepovers get flagged and won't trigger a notification.")
         }
@@ -135,7 +137,7 @@ struct SettingsView: View {
                     .textSelection(.enabled)   // long-press to copy & share with support
             }
         } header: {
-            Text("About")
+            Label("About", systemImage: "info.circle.fill")
         } footer: {
             Text("Tap \"Test API\" first — it spends only ~1 request to confirm your key works before you run a full scan. Background scan runs ~once a day when iOS allows; keep notifications enabled.")
         }
