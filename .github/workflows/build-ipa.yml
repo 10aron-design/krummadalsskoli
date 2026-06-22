@@ -1,0 +1,81 @@
+name: Build unsigned IPA
+
+# Builds an UNSIGNED .ipa on a cloud Mac so Windows users can sideload it
+# with Sideloadly (Sideloadly does the signing with your Apple ID).
+#
+# Two ways to grab the result:
+#  - EASIEST: repo -> Releases -> "Latest sideload IPA" -> download FlightDeals.ipa
+#    (a plain .ipa, nothing to unzip).
+#  - Or: Actions -> this run -> Artifacts -> "FlightDeals-ipa" (this downloads as
+#    a .zip that you must EXTRACT first to get the inner FlightDeals.ipa).
+
+on:
+  workflow_dispatch:        # manual button
+  push:
+    branches:
+      - claude/modest-sagan-t3836u
+      - claude/flight-deals-ios-app-8sd65h
+
+permissions:
+  contents: write           # needed to publish the Release asset
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+
+      - name: Build app (no code signing)
+        run: |
+          xcodebuild \
+            -project FlightDeals.xcodeproj \
+            -scheme FlightDeals \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package into .ipa
+        run: |
+          APP_PATH="build/Build/Products/Release-iphoneos/FlightDeals.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "Build product not found at $APP_PATH"; exit 1
+          fi
+          # Sanity: the .app must contain a real Mach-O executable.
+          if [ ! -f "$APP_PATH/FlightDeals" ]; then
+            echo "Executable missing inside .app:"; ls -lR "$APP_PATH"; exit 1
+          fi
+          rm -rf Payload FlightDeals.ipa
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -r FlightDeals.ipa Payload >/dev/null
+          echo "=== IPA contents (must start with Payload/FlightDeals.app/) ==="
+          unzip -l FlightDeals.ipa
+          echo "=== IPA size ==="
+          ls -lh FlightDeals.ipa
+
+      - name: Upload IPA artifact (zip-wrapped — must be extracted)
+        uses: actions/upload-artifact@v4
+        with:
+          name: FlightDeals-ipa
+          path: FlightDeals.ipa
+          if-no-files-found: error
+
+      - name: Publish IPA to a Release (plain .ipa, no unzip needed)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ipa-latest
+          name: Latest sideload IPA
+          body: |
+            Unsigned **FlightDeals.ipa** for sideloading with Sideloadly / AltStore.
+            Download the `FlightDeals.ipa` asset below (it is a plain .ipa — drag it
+            straight into Sideloadly, no extraction needed).
+          files: FlightDeals.ipa
+          fail_on_unmatched_files: true
