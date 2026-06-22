@@ -8,8 +8,10 @@ struct SkyscannerCredentials: Codable, Equatable {
     /// The RapidAPI host for the Sky-Scrapper listing. Override only if you
     /// subscribed to a differently-named Skyscanner listing on RapidAPI.
     var rapidApiHost: String = "sky-scrapper.p.rapidapi.com"
-    /// Market/locale knobs Skyscanner expects.
-    var market: String = "US"
+    /// Pricing market (point-of-sale country). Skyscanner fares vary a LOT by
+    /// market — "IE" matches skyscanner.ie (EUR), which is what most Iceland
+    /// users see. Change in Settings if your prices look off.
+    var market: String = "IE"
     var locale: String = "en-US"
 
     var isConfigured: Bool { !rapidApiKey.isEmpty && !rapidApiHost.isEmpty }
