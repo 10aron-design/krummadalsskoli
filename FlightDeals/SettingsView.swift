@@ -13,7 +13,18 @@ struct SettingsView: View {
                 trapSection
                 aboutSection
             }
+            .scrollContentBackground(.hidden)
+            .background(AeroBackground())
+            .tint(Theme.blue)
             .navigationTitle("Settings")
+        }
+    }
+
+    /// Glossy translucent panel behind each settings row, over the gradient.
+    private var glassRow: some View {
+        ZStack {
+            Rectangle().fill(.ultraThinMaterial)
+            Rectangle().fill(.white.opacity(0.35))
         }
     }
 
@@ -30,6 +41,7 @@ struct SettingsView: View {
         } footer: {
             Text("Get a free key at rapidapi.com → subscribe to the \"Sky-Scrapper\" API → copy your X-RapidAPI-Key. Keep the host as sky-scrapper.p.rapidapi.com unless you picked a different Skyscanner listing.")
         }
+        .listRowBackground(glassRow)
     }
 
     private var routeSection: some View {
@@ -43,6 +55,7 @@ struct SettingsView: View {
         } header: {
             Label("Route", systemImage: "map.fill")
         }
+        .listRowBackground(glassRow)
     }
 
     private var flexibleDatesSection: some View {
@@ -74,6 +87,7 @@ struct SettingsView: View {
                  ? "Price-calendar mode asks Skyscanner for the cheapest fare on EVERY day with one cheap call per month, then only spends full searches on the cheapest days — so it matches Skyscanner's numbers and barely touches your quota. A search costs ~2–5 calls; the calendar costs 1. Free plans cap near ~100 calls/MONTH, so keep the cheapest-days count modest."
                  : "Legacy mode scans every Nth day between the two months and tries a few trip lengths, spread evenly to fit the budget. ⚠️ Each search costs ~2–5 RapidAPI calls (Skyscanner returns results in stages, so the app polls). Free plans cap you near ~100 calls/MONTH — keep \"Max searches per scan\" low (e.g. 5) and scan sparingly.")
         }
+        .listRowBackground(glassRow)
     }
 
     private var dealSection: some View {
@@ -98,6 +112,7 @@ struct SettingsView: View {
         } footer: {
             Text("Skyscanner shows per-person fares — keep this ON to match it. Iceland→Japan is rarely under ~700 \(store.config.preferredCurrency) per person, so set this realistically or \"Good deals\" stays empty.")
         }
+        .listRowBackground(glassRow)
     }
 
     private var trapSection: some View {
@@ -115,6 +130,7 @@ struct SettingsView: View {
         } footer: {
             Text("Cheap fares that hide 52-hour journeys, unconnected airlines, or overnight airport sleepovers get flagged and won't trigger a notification.")
         }
+        .listRowBackground(glassRow)
     }
 
     private var aboutSection: some View {
@@ -141,6 +157,7 @@ struct SettingsView: View {
         } footer: {
             Text("Tap \"Test API\" first — it spends only ~1 request to confirm your key works before you run a full scan. Background scan runs ~once a day when iOS allows; keep notifications enabled.")
         }
+        .listRowBackground(glassRow)
     }
 }
 
