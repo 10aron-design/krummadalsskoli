@@ -97,7 +97,7 @@ final class AppStore: ObservableObject {
     /// Clean (non-trap) fares that are simply over the user's max price — shown
     /// so the list isn't empty when nothing beats the threshold.
     var aboveBudgetDeals: [FlightDeal] {
-        deals.filter { !$0.isTrap && $0.price > config.maxPrice }
+        deals.filter { !$0.isTrap && FlightSearchService.comparablePrice($0, config: config) > config.maxPrice }
     }
 
     // MARK: Persistence helpers

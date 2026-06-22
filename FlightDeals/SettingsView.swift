@@ -68,8 +68,9 @@ struct SettingsView: View {
 
     private var dealSection: some View {
         Section {
+            Toggle("Max price is per person", isOn: $store.config.maxPriceIsPerPerson)
             HStack {
-                Text("Max price (total)")
+                Text(store.config.maxPriceIsPerPerson ? "Max price / person" : "Max price (total)")
                 Spacer()
                 TextField("price", value: $store.config.maxPrice, format: .number)
                     .keyboardType(.decimalPad)
@@ -77,13 +78,15 @@ struct SettingsView: View {
                 Text(store.config.preferredCurrency)
             }
             if store.config.adults > 1 {
-                Text("= \(Int(store.config.maxPrice) / store.config.adults) \(store.config.preferredCurrency) per person × \(store.config.adults) adults")
+                Text(store.config.maxPriceIsPerPerson
+                     ? "= \(Int(store.config.maxPrice) * store.config.adults) \(store.config.preferredCurrency) total for \(store.config.adults) adults"
+                     : "= \(Int(store.config.maxPrice) / store.config.adults) \(store.config.preferredCurrency) per person × \(store.config.adults) adults")
                     .font(.caption).foregroundStyle(.secondary)
             }
         } header: {
             Text("What counts as a good deal")
         } footer: {
-            Text("Max price is the TOTAL for everyone in the search (\(store.config.adults) adult\(store.config.adults == 1 ? "" : "s")). Iceland→Japan round-trips are rarely under ~600 \(store.config.preferredCurrency) per person, so set this realistically or you'll see nothing in \"Good deals\".")
+            Text("Skyscanner shows per-person fares — keep this ON to match it. Iceland→Japan is rarely under ~700 \(store.config.preferredCurrency) per person, so set this realistically or \"Good deals\" stays empty.")
         }
     }
 

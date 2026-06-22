@@ -219,7 +219,7 @@ struct FlightSearchService {
                     origin: job.origin, destination: job.destination,
                     departure: job.departure, returnDate: ret,
                     adults: config.adults, nonStop: config.nonStopOnly,
-                    currency: config.preferredCurrency, max: 5)
+                    currency: config.preferredCurrency, max: 15)
                 for offer in raw {
                     results.append(Self.normalize(
                         offer, origin: job.origin, destination: job.destination,
@@ -244,8 +244,13 @@ struct FlightSearchService {
         return (unique, lastError)
     }
 
+    /// The price we compare against maxPrice — per person or total per config.
+    static func comparablePrice(_ deal: FlightDeal, config: SearchConfig) -> Double {
+        config.maxPriceIsPerPerson ? deal.price / Double(max(1, config.adults)) : deal.price
+    }
+
     /// Clean deals at or under the user's max price = worth a ping.
     static func goodDeals(from deals: [FlightDeal], config: SearchConfig) -> [FlightDeal] {
-        deals.filter { !$0.isTrap && $0.price <= config.maxPrice }
+        deals.filter { !$0.isTrap && comparablePrice($0, config: config) <= config.maxPrice }
     }
 }

@@ -249,6 +249,8 @@ actor SkyscannerClient: FlightProvider {
                 offer.itineraries.allSatisfy { ($0.segments.count - 1) <= 0 }
             }
         }
+        // Keep the CHEAPEST offers, not the first few in "best" order.
+        offers.sort { $0.price.amount < $1.price.amount }
         return Array(offers.prefix(max))
     }
 

@@ -23,7 +23,10 @@ struct SearchConfig: Codable, Equatable {
     var preferredCurrency: String = "EUR"
 
     /// A deal must be at or below this price to be "good" and worth a ping.
-    var maxPrice: Double = 600
+    var maxPrice: Double = 700
+    /// If true, maxPrice is compared PER PERSON (price ÷ adults), matching how
+    /// Skyscanner shows fares. If false, it's the total for the whole party.
+    var maxPriceIsPerPerson: Bool = true
 
     /// Sampling step in days across the month window. Smaller = more API calls.
     var samplingStepDays: Int = 7
@@ -42,10 +45,12 @@ struct SearchConfig: Codable, Equatable {
     var maxTotalTravelHours: Double = 30
     /// Reject more than this many stops on a single leg.
     var maxStopsPerLeg: Int = 2
-    /// Treat self-transfer / mixed-airline itineraries as traps.
-    var rejectSelfTransfer: Bool = true
+    /// Treat self-transfer / mixed-airline itineraries as traps. OFF by default:
+    /// Iceland→Japan almost always connects on partner carriers, so this caused
+    /// false positives that hid genuinely good connecting deals.
+    var rejectSelfTransfer: Bool = false
     /// Treat overnight airport layovers as traps.
-    var rejectOvernightLayover: Bool = true
+    var rejectOvernightLayover: Bool = false
 
     static func firstOfMonth(monthsFromNow: Int) -> Date {
         let cal = Calendar.current
