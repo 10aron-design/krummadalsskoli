@@ -1,0 +1,17 @@
+# deps & build output
+node_modules/
+dist/
+*.ipa
+
+# xcode build artifacts
+ios/App/build/
+ios/App/DerivedData/
+**/*.xcarchive
+ios/App/Pods/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/App.xcodeproj/xcuserdata/
+DerivedData/
+
+# misc
+.DS_Store
+resources/preview-*.png

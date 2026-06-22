@@ -1,0 +1,30 @@
+{
+  "name": "private-ledger",
+  "version": "1.0.0",
+  "description": "The Private Ledger — an economics academy in five courses (iOS app)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "private": true,
+  "dependencies": {
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/cli": "^8.4.1",
+    "@capacitor/core": "^8.4.1",
+    "@capacitor/ios": "^8.4.1",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "sharp": "^0.35.2"
+  },
+  "allowScripts": {
+    "sharp@0.32.6": true,
+    "sharp@0.35.2": true
+  }
+}

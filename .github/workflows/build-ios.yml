@@ -1,0 +1,66 @@
+name: Build iOS IPA
+
+# Builds a real, runnable .ipa on a hosted macOS runner.
+# No Apple Developer account required: the binary is compiled and packaged
+# UNSIGNED, then uploaded as a downloadable artifact. Sideload it with
+# AltStore / Sideloadly / Xcode (which re-sign with your free Apple ID),
+# or feed it to a signing service.
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app || sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Install JS deps
+        run: npm install --no-audit --no-fund
+
+      - name: Sync Capacitor (web assets + native config)
+        run: npx cap sync ios
+
+      - name: Archive (unsigned)
+        run: |
+          set -eo pipefail
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -skipPackagePluginValidation \
+            clean archive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" DEVELOPMENT_TEAM="" \
+            | xcpretty || xcodebuild \
+            -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -skipPackagePluginValidation clean archive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" DEVELOPMENT_TEAM=""
+
+      - name: Package unsigned IPA
+        run: |
+          set -e
+          APP_PATH="$RUNNER_TEMP/App.xcarchive/Products/Applications/App.app"
+          test -d "$APP_PATH"
+          rm -rf "$RUNNER_TEMP/Payload" && mkdir -p "$RUNNER_TEMP/Payload"
+          cp -R "$APP_PATH" "$RUNNER_TEMP/Payload/"
+          ( cd "$RUNNER_TEMP" && zip -qry PrivateLedger-unsigned.ipa Payload )
+          mkdir -p dist && mv "$RUNNER_TEMP/PrivateLedger-unsigned.ipa" dist/
+          ls -lh dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PrivateLedger-unsigned-ipa
+          path: dist/PrivateLedger-unsigned.ipa
+          if-no-files-found: error

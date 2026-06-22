@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="72%">
+      <stop offset="0%" stop-color="#10271B"/>
+      <stop offset="100%" stop-color="#0B1F15"/>
+    </radialGradient>
+    <radialGradient id="core" cx="50%" cy="38%" r="70%">
+      <stop offset="0%" stop-color="#10271B"/>
+      <stop offset="100%" stop-color="#0a1a12"/>
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="1024" height="1024" rx="0" fill="url(#bg)"/>
+  
+  <g fill="none" stroke="#C9A227" stroke-width="3.07" opacity="0.85">
+      <ellipse cx="512.0" cy="512.0" rx="120.32" ry="66.18" transform="rotate(0 512.0 512.0)"/>
+      <ellipse cx="512.0" cy="512.0" rx="141.31" ry="77.72" transform="rotate(10 512.0 512.0)"/>
+      <ellipse cx="512.0" cy="512.0" rx="162.30" ry="89.27" transform="rotate(20 512.0 512.0)"/>
+      <ellipse cx="512.0" cy="512.0" rx="183.30" ry="100.81" transform="rotate(30 512.0 512.0)"/>
+      <ellipse cx="512.0" cy="512.0" rx="204.29" ry="112.36" transform="rotate(40 512.0 512.0)"/>
+      <ellipse cx="512.0" cy="512.0" rx="225.28" ry="123.90" transform="rotate(50 512.0 512.0)"/>
+      <ellipse cx="512.0" cy="512.0" rx="246.27" ry="135.45" transform="rotate(60 512.0 512.0)"/>
+      <ellipse cx="512.0" cy="512.0" rx="267.26" ry="147.00" transform="rotate(70 512.0 512.0)"/>
+      <ellipse cx="512.0" cy="512.0" rx="288.26" ry="158.54" transform="rotate(80 512.0 512.0)"/>
+      <ellipse cx="512.0" cy="512.0" rx="309.25" ry="170.09" transform="rotate(90 512.0 512.0)"/>
+      <ellipse cx="512.0" cy="512.0" rx="330.24" ry="181.63" transform="rotate(100 512.0 512.0)"/>
+      <ellipse cx="512.0" cy="512.0" rx="351.23" ry="193.18" transform="rotate(110 512.0 512.0)"/>
+      <ellipse cx="512.0" cy="512.0" rx="372.22" ry="204.72" transform="rotate(120 512.0 512.0)"/>
+      <ellipse cx="512.0" cy="512.0" rx="393.22" ry="216.27" transform="rotate(130 512.0 512.0)"/>
+      <ellipse cx="512.0" cy="512.0" rx="414.21" ry="227.81" transform="rotate(140 512.0 512.0)"/>
+      <ellipse cx="512.0" cy="512.0" rx="435.20" ry="239.36" transform="rotate(150 512.0 512.0)"/>
+      <ellipse cx="512.0" cy="512.0" rx="456.19" ry="250.91" transform="rotate(160 512.0 512.0)"/>
+      <ellipse cx="512.0" cy="512.0" rx="477.18" ry="262.45" transform="rotate(170 512.0 512.0)"/>
+  </g>
+  <circle cx="512.0" cy="512.0" r="153.60" fill="url(#core)" stroke="#E8C766" stroke-width="6.14"/>
+  <circle cx="512.0" cy="512.0" r="129.02" fill="none" stroke="#C9A227" stroke-width="3.07" opacity="0.7"/>
+  <text x="512.0" y="558.1" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif" font-weight="bold"
+        font-size="153.6" fill="#E8C766">kr</text>
+  <text x="512.0" y="607.2" text-anchor="middle"
+        font-family="Georgia, serif" letter-spacing="10.2"
+        font-size="42.0" fill="#C9A227" opacity="0.8">EST. MMXXVI</text>
+</svg>

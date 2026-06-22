@@ -1,0 +1,25 @@
+{
+  "appId": "com.privateledger.app",
+  "appName": "Private Ledger",
+  "webDir": "www",
+  "backgroundColor": "#0B1F15",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0B1F15",
+    "scrollEnabled": true,
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 700,
+      "backgroundColor": "#0B1F15",
+      "showSpinner": false,
+      "launchAutoHide": true
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0B1F15",
+      "overlaysWebView": true
+    }
+  }
+}
